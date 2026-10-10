@@ -61,13 +61,13 @@
       <div class="buttons">
         <button id="enter-vr" disabled>Entrer en VR</button>
         <button id="enter-ar" class="secondary" disabled>Dans ma pièce (passthrough)</button>
-        <button id="login" hidden>Se connecter à Qlik Cloud</button>
+        <button id="login" class="secondary" hidden>Données en direct : se connecter à Qlik Cloud</button>
         <a id="home-link" class="secondary-link" href="/">← Tous les projets</a>
       </div>
       <p id="status" class="status">Chargement…</p>
       <section id="room" hidden>
         <label>Votre nom<input id="name" type="text" maxlength="24" autocomplete="nickname" /></label>
-        <div class="sub" style="margin:0">Dans la pièce — les sélections de chacun s'appliquent pour tous :</div>
+        <div id="room-note" class="sub" style="margin:0">Dans la pièce — les sélections de chacun s'appliquent pour tous :</div>
         <ul id="people"></ul>
       </section>
       <details>

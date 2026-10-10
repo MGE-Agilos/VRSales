@@ -4,7 +4,7 @@
 //   globe   : globe des lieux (lat/lon)               cloud  : nuage de points 3D (3 mesures) où l'on entre
 // Une app connue a un préréglage (éléments maîtres) ; sinon la configuration est déduite des champs.
 
-import { DEMO_MEASURES } from './demo.js';
+import { DEMO_MEASURES, SNAPSHOT_MEASURES } from './demo.js';
 
 const PRESETS = {
   // Sales Analysis — tenant beyond-data-group-training
@@ -31,6 +31,20 @@ export const DEMO_CONFIG = {
   ring: { dim: df('Année-Mois'), measure: dm('ventes'), color: dm('margePct') },
   globe: { dim: df('Ville'), lat: dm('lat'), lon: dm('lon'), measure: dm('ventes'), color: dm('margePct') },
   cloud: { dim: df('Client'), x: dm('ventes'), y: dm('margePct'), z: dm('commandes') },
+};
+
+// copie publique de Sales Analysis : même pièce que le préréglage de l'app, sur les champs exportés
+const sm = (key) => ({ key, label: SNAPSHOT_MEASURES[key].label });
+export const SNAPSHOT_CONFIG = {
+  filters: [df('Year'), df('Quarter'), df('Category'), df('Country'), { field: 'EmployeeName', label: 'Employee' }, df('Supplier')],
+  kpis: [sm('revenue'), sm('margin'), sm('marginPct'), sm('orders')],
+  matrix: {
+    dims: [df('Category'), df('Year')], measure: sm('revenue'),
+    choices: [df('Category'), df('Country'), { field: 'EmployeeName', label: 'Employee' }, df('Supplier'), df('Shipper')],
+  },
+  ring: { dim: { field: 'YearMonth', label: 'Year-Month' }, measure: sm('revenue'), color: sm('marginPct') },
+  globe: { dim: df('City'), lat: sm('lat'), lon: sm('lon'), measure: sm('revenue'), color: sm('marginPct') },
+  cloud: { dim: df('Customer'), x: sm('revenue'), y: sm('marginPct'), z: sm('orders') },
 };
 
 // configuration déduite pour une app sans préréglage : champs texte peu nombreux en filtres, Sum() des champs numériques
@@ -66,5 +80,6 @@ async function autoConfig(source) {
 
 export async function configFor(source) {
   if (source.kind === 'demo') return DEMO_CONFIG;
+  if (source.kind === 'snapshot') return SNAPSHOT_CONFIG;
   return PRESETS[source.appId] ?? autoConfig(source);
 }

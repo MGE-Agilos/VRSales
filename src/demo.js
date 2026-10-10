@@ -1,5 +1,7 @@
-// Source « démo » : petit moteur associatif local (mêmes états S/O/A/X que Qlik) sur des ventes générées.
-// Sert quand le proxy Qlik n'est pas configuré (?app=demo). Les mesures sont des fonctions JS : { label, fn(rows) }.
+// Moteur associatif local (mêmes états S/O/A/X que Qlik), pour jouer sans connexion au moteur Qlik :
+//   connectDemo()          ventes de vélos générées (?app=demo)
+//   connectSnapshot(url)   copie figée de Sales Analysis (?app=snapshot), exportée par tools/export-snapshot.mjs
+// Les mesures sont des fonctions JS : { label, fn(rows), fmt(n) }.
 
 const CITIES = [
   ['Bruxelles', 'Belgique', 'Europe', 50.85, 4.35], ['Anvers', 'Belgique', 'Europe', 51.22, 4.4], ['Liège', 'Belgique', 'Europe', 50.63, 5.57],
@@ -59,8 +61,36 @@ export const DEMO_MEASURES = {
   lon: { label: 'Longitude', fn: (r) => r[0]?.Longitude ?? NaN, fmt: String },
 };
 
+// mesures de la copie de Sales Analysis : mêmes définitions que les éléments maîtres de l'app
+const qnum = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const first = (k) => (rows) => rows.find((r) => r[k] != null)?.[k] ?? NaN;
+export const SNAPSHOT_MEASURES = {
+  revenue: { label: 'Revenue $', fn: sum('Sales'), fmt: (n) => qnum.format(n) },
+  margin: { label: 'Total Margin$', fn: (r) => sum('Sales')(r) - sum('Costs')(r), fmt: (n) => qnum.format(n) },
+  marginPct: { label: 'Total Margin %', fn: (r) => (sum('Sales')(r) - sum('Costs')(r)) / (sum('Sales')(r) || NaN), fmt: (n) => `${(n * 100).toFixed(1)}%` },
+  orders: { label: 'Total Orders', fn: (r) => new Set(r.map((x) => x.OrderID).filter(Boolean)).size, fmt: (n) => qnum.format(n) },
+  lat: { label: 'Latitude', fn: first('Latitude'), fmt: String },
+  lon: { label: 'Longitude', fn: first('Longitude'), fmt: String },
+};
+
 export function connectDemo() {
-  const rows = generate();
+  return engine({ kind: 'demo', title: 'Démo — ventes de vélos', rows: generate(), measures: DEMO_MEASURES });
+}
+
+export async function connectSnapshot(url) {
+  const d = await fetch(url).then((r) => r.json());
+  const rows = Array.from({ length: d.rows }, (_, i) => {
+    const r = {};
+    for (const [f, { values, idx }] of Object.entries(d.fields)) r[f] = values[idx[i]];
+    for (const [m, col] of Object.entries(d.measures)) r[m] = col[i] ?? 0;
+    r.Latitude = d.measures.Latitude[i];
+    r.Longitude = d.measures.Longitude[i];
+    return r;
+  });
+  return engine({ kind: 'snapshot', title: `${d.title} — copie publique`, exported: d.exported, rows, measures: SNAPSHOT_MEASURES });
+}
+
+function engine({ kind, title, exported, rows, measures: MEASURES }) {
   const fields = Object.keys(rows[0]).filter((k) => typeof rows[0][k] === 'string');
   // valeurs distinctes de chaque champ, dans l'ordre de chargement (comme Qlik) ; une ligne = indices d'éléments
   const values = {};
@@ -103,12 +133,13 @@ export function connectDemo() {
     commit(next);
   };
   const dimField = (d) => d.field;
-  const measure = (m) => DEMO_MEASURES[m.key];
+  const measure = (m) => MEASURES[m.key];
   const fmtCell = (m, n) => ({ text: m.fmt(n), num: n, elem: 0 });
 
   return {
-    kind: 'demo',
-    title: 'Démo — ventes de vélos',
+    kind,
+    title,
+    exported,
     onChange(cb) { listeners.add(cb); },
     async list(dim) {
       const f = dimField(dim);
@@ -121,8 +152,8 @@ export function connectDemo() {
           const out = values[f].map((text, elem) => {
             const state = own ? (own.has(elem) ? 'S' : ignoringSelf.has(elem) ? 'A' : 'X') : all.has(elem) ? 'O' : 'X';
             return { text, elem, state, num: NaN };
-          }).sort((a, b) => rank[a.state] - rank[b.state] || a.text.localeCompare(b.text, 'fr', { numeric: true }));
-          return { title: dim.label ?? f, rows: out, total: values[f].length, selected: own?.size ?? 0 };
+          }).filter((r) => r.text !== '').sort((a, b) => rank[a.state] - rank[b.state] || a.text.localeCompare(b.text, 'fr', { numeric: true }));
+          return { title: dim.label ?? f, rows: out, total: out.length, selected: own?.size ?? 0 };
         },
         select: async (elem) => toggle(f, elem),
         clear: async () => { const n = new Map(sel); n.delete(f); commit(n); },
@@ -136,6 +167,7 @@ export function connectDemo() {
         async layout() {
           const groups = new Map();
           for (const i of matching(null)) {
+            if (fs.some((f) => values[f][index[f][i]] === '')) continue;
             const key = fs.map((f) => index[f][i]).join('|');
             if (!groups.has(key)) groups.set(key, []);
             groups.get(key).push(rows[i]);

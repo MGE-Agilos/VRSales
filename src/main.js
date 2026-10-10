@@ -3,7 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { connectQlik, listApps } from './qlik.js';
 import { HOSTED, login, completeLogin, accessToken, websocketUrl, rest } from './qlik-oauth.js';
-import { connectDemo } from './demo.js';
+import { connectDemo, connectSnapshot } from './demo.js';
+import snapshotUrl from '../assets/sales-snapshot.json?url';
 import { configFor } from './config.js';
 import { ListBox, SelectionBar, Kpi, Tooltip, Toasts } from './ui.js';
 import { Matrix, TimeRing, Globe, Cloud } from './viz.js';
@@ -16,6 +17,7 @@ import { ScreenNav, VIEWS } from './screen.js';
 // chaque sélection (gâchette sur une valeur, une barre, une tour, un point) se propage instantanément à tous
 // les visuels, en vert / blanc / gris comme dans Qlik Sense.
 //   ?app=<id d'app Qlik>   (par défaut : QLIK_APP_ID de .env.local)      ?app=demo   données d'exemple hors ligne
+//   ?app=snapshot          copie publique figée de Sales Analysis (sans compte Qlik ; défaut de la page hébergée)
 //
 // Deux façons de joindre Qlik Cloud :
 //   - serveur local (npm run dev) : proxy /qlik avec la clé API de .env.local, session partagée, présence des autres
@@ -127,10 +129,11 @@ const fontReady = Promise.race([document.fonts.load(`600 40px ${FONT}`), new Pro
 async function chooseSource() {
   const status = await fetch('/qlik-status').then((r) => (r.ok ? r.json() : null)).catch(() => null) ?? { configured: false };
   hosted = !status.configured || params.get('auth') === 'oauth';
-  const wanted = params.get('app') ?? (hosted ? HOSTED.appId : status.appId);
   ui.app.innerHTML = '';
+  ui.app.add(new Option('Sales Analysis — copie publique (sans compte)', 'snapshot'));
   ui.app.add(new Option('Démo hors ligne (données d\'exemple)', 'demo'));
-  if (hosted) return chooseHosted(wanted);
+  if (hosted) return chooseHosted();
+  const wanted = params.get('app') ?? status.appId;
   presence.start();
   ui.room.hidden = false;
   if (status.configured) {
@@ -142,23 +145,27 @@ async function chooseSource() {
   ui.app.value = wanted;
   ui.app.addEventListener('change', () => { location.search = `?app=${ui.app.value}`; });
   if (!wanted || wanted === 'demo') return connectDemo();
+  if (wanted === 'snapshot') return connectSnapshot(snapshotUrl);
   setStatus(`Connexion au moteur Qlik (${status.tenant})…`);
   if (!status.configured) throw new Error('proxy Qlik non configuré : ajoutez QLIK_API_KEY dans .env.local (voir README)');
   return connectQlik(wanted);
 }
 
 // page hébergée : connexion Qlik du visiteur (redirection vers Qlik Cloud, puis retour ici)
-async function chooseHosted(wanted) {
+async function chooseHosted() {
   ui.home.hidden = true;
+  await completeLogin();
+  // sans compte : la copie publique ; connecté : l'app en direct
+  const wanted = params.get('app') ?? (accessToken() ? HOSTED.appId : 'snapshot');
   ui.app.value = wanted;
   ui.app.addEventListener('change', () => { location.search = `?app=${ui.app.value}`; });
+  ui.login.addEventListener('click', () => login(`${location.origin}${location.pathname}?app=${HOSTED.appId}`));
+  if (!accessToken()) ui.login.hidden = false;
   if (wanted === 'demo') return connectDemo();
-  ui.login.addEventListener('click', () => login());
-  await completeLogin();
+  if (wanted === 'snapshot') return connectSnapshot(snapshotUrl);
   if (!accessToken()) {
-    ui.login.hidden = false;
     ui.panel.classList.remove('collapsed');
-    throw Object.assign(new Error(`Connectez-vous avec votre compte Qlik Cloud (${HOSTED.tenant}) pour charger les données — ou choisissez la démo.`), { quiet: true });
+    throw Object.assign(new Error(`Connectez-vous avec votre compte Qlik Cloud (${HOSTED.tenant}) pour charger ces données en direct — ou choisissez la copie publique.`), { quiet: true });
   }
   listApps(rest).then((apps) => {
     for (const a of apps) ui.app.add(new Option(a.name, a.id));
@@ -175,7 +182,7 @@ async function build() {
   source.onDisconnect = () => setStatus('Connexion au moteur Qlik perdue — rechargez la page.', true);
   setStatus(`${source.title} · création des objets…`);
 
-  const title = label(`${source.title}  ·  ${source.kind === 'qlik' ? 'Qlik Cloud' : 'démo'}`, { size: 0.13, color: Q.ink });
+  const title = label(`${source.title}  ·  ${{ qlik: 'Qlik Cloud', snapshot: `données du ${source.exported}`, demo: 'démo' }[source.kind]}`, { size: 0.13, color: Q.ink });
   title.position.set(0, 3.26, -3.45);
   scene.add(title);
 
@@ -240,9 +247,11 @@ async function build() {
     });
   }
 
+  if (source.kind !== 'qlik') document.getElementById('room-note').textContent = 'Dans la pièce — ces données sont calculées sur chaque appareil : chacun garde ses propres sélections.';
   source.onChange(refresh);
   await refresh();
-  setStatus(`${source.title} · ${source.kind === 'qlik' ? 'connecté au moteur Qlik Cloud' : 'données de démonstration'} — sélectionnez !`);
+  const how = { qlik: 'connecté au moteur Qlik Cloud', snapshot: `données figées au ${source.exported}, recalculées dans votre navigateur`, demo: 'données de démonstration' }[source.kind];
+  setStatus(`${source.title} · ${how} — sélectionnez !`);
   send(`app ${source.title} prête`);
 }
 

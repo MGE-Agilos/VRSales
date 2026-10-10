@@ -31,6 +31,12 @@ Une page statique n'a pas de serveur : pas de proxy ni de clé API. **Chaque vis
 Qlik Cloud** (OAuth « single-page app » + PKCE, `src/qlik-oauth.js`). Il a donc sa propre session moteur et ses propres
 sélections, et ne voit que les apps auxquelles il a accès. La présence (avatars, Suivre) n'existe qu'avec le serveur local.
 
+**Sans compte, tout le monde peut tester** la *copie publique* de Sales Analysis (option par défaut, `?app=snapshot`) :
+les données de l'app sont exportées dans `assets/sales-snapshot.json` (2 329 lignes de commande : catégorie, produit, pays,
+ville, client, vendeur, fournisseur, transporteur, mois, ventes, coûts, quantités), et le moteur associatif local de
+`src/demo.js` les recalcule dans le navigateur, avec les mêmes chiffres que Qlik (1 578 642 de CA, 953 commandes). Pour
+rafraîchir la copie : `node dataviz/tools/export-snapshot.mjs` (clé API de `.env.local`), puis commit et push.
+
 Le client OAuth « Qlik en VR (GitHub Pages VRSales) » est déclaré sur le tenant (Administration → OAuth). Il n'accepte que
 les adresses https://mge-agilos.github.io/VRSales/ et https://localhost:5173/dataviz/ : si l'adresse de publication change,
 il faut l'ajouter dans ce client. `?app=demo` fonctionne sans connexion.

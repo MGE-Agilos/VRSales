@@ -24,12 +24,12 @@ const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-'
 const random = (n) => b64url(crypto.getRandomValues(new Uint8Array(n)));
 
 // redirige vers la page de connexion Qlik ; on revient ensuite sur la même page avec ?code=…
-export async function login() {
+export async function login(returnTo = location.href) {
   const verifier = random(64);
   const state = random(24);
   store.set('verifier', verifier);
   store.set('state', state);
-  store.set('return', location.href);
+  store.set('return', returnTo);
   const challenge = b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
   const q = new URLSearchParams({
     response_type: 'code', client_id: HOSTED.clientId, redirect_uri: redirectUri(), scope: 'user_default',
