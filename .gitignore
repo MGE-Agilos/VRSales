@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# vidéos promo, enregistrements du casque et éléments de marque : restent en local
+video/
+.env
+.env.*
+!.env.example
