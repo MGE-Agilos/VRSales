@@ -2,7 +2,7 @@
   "name": "vrsales",
   "private": true,
   "type": "module",
-  "description": "Qlik en VR : visualisations immersives WebXR sur le moteur associatif de Qlik Cloud",
+  "description": "Qlik in VR: immersive WebXR visualisations on the Qlik Cloud associative engine",
   "scripts": {
     "build": "vite build --config vite.pages.config.js",
     "preview": "vite preview --config vite.pages.config.js"

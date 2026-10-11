@@ -4,19 +4,19 @@
 // Les mesures sont des fonctions JS : { label, fn(rows), fmt(n) }.
 
 const CITIES = [
-  ['Bruxelles', 'Belgique', 'Europe', 50.85, 4.35], ['Anvers', 'Belgique', 'Europe', 51.22, 4.4], ['Liège', 'Belgique', 'Europe', 50.63, 5.57],
-  ['Paris', 'France', 'Europe', 48.86, 2.35], ['Lyon', 'France', 'Europe', 45.76, 4.84], ['Berlin', 'Allemagne', 'Europe', 52.52, 13.4],
-  ['Munich', 'Allemagne', 'Europe', 48.14, 11.58], ['Madrid', 'Espagne', 'Europe', 40.42, -3.7], ['Londres', 'Royaume-Uni', 'Europe', 51.51, -0.13],
-  ['Stockholm', 'Suède', 'Europe', 59.33, 18.07], ['New York', 'États-Unis', 'Amériques', 40.71, -74.0], ['Chicago', 'États-Unis', 'Amériques', 41.88, -87.63],
-  ['San Francisco', 'États-Unis', 'Amériques', 37.77, -122.42], ['Montréal', 'Canada', 'Amériques', 45.5, -73.57], ['São Paulo', 'Brésil', 'Amériques', -23.55, -46.63],
-  ['Mexico', 'Mexique', 'Amériques', 19.43, -99.13], ['Tokyo', 'Japon', 'Asie-Pacifique', 35.68, 139.69], ['Singapour', 'Singapour', 'Asie-Pacifique', 1.35, 103.82],
-  ['Sydney', 'Australie', 'Asie-Pacifique', -33.87, 151.21], ['Shanghai', 'Chine', 'Asie-Pacifique', 31.23, 121.47], ['Dubaï', 'Émirats', 'Moyen-Orient & Afrique', 25.2, 55.27],
-  ['Le Cap', 'Afrique du Sud', 'Moyen-Orient & Afrique', -33.92, 18.42], ['Casablanca', 'Maroc', 'Moyen-Orient & Afrique', 33.57, -7.59],
+  ['Brussels', 'Belgium', 'Europe', 50.85, 4.35], ['Antwerp', 'Belgium', 'Europe', 51.22, 4.4], ['Liège', 'Belgium', 'Europe', 50.63, 5.57],
+  ['Paris', 'France', 'Europe', 48.86, 2.35], ['Lyon', 'France', 'Europe', 45.76, 4.84], ['Berlin', 'Germany', 'Europe', 52.52, 13.4],
+  ['Munich', 'Germany', 'Europe', 48.14, 11.58], ['Madrid', 'Spain', 'Europe', 40.42, -3.7], ['London', 'United Kingdom', 'Europe', 51.51, -0.13],
+  ['Stockholm', 'Sweden', 'Europe', 59.33, 18.07], ['New York', 'United States', 'Americas', 40.71, -74.0], ['Chicago', 'United States', 'Americas', 41.88, -87.63],
+  ['San Francisco', 'United States', 'Americas', 37.77, -122.42], ['Montreal', 'Canada', 'Americas', 45.5, -73.57], ['São Paulo', 'Brazil', 'Americas', -23.55, -46.63],
+  ['Mexico City', 'Mexico', 'Americas', 19.43, -99.13], ['Tokyo', 'Japan', 'Asia-Pacific', 35.68, 139.69], ['Singapore', 'Singapore', 'Asia-Pacific', 1.35, 103.82],
+  ['Sydney', 'Australia', 'Asia-Pacific', -33.87, 151.21], ['Shanghai', 'China', 'Asia-Pacific', 31.23, 121.47], ['Dubai', 'UAE', 'Middle East & Africa', 25.2, 55.27],
+  ['Cape Town', 'South Africa', 'Middle East & Africa', -33.92, 18.42], ['Casablanca', 'Morocco', 'Middle East & Africa', 33.57, -7.59],
 ];
-const CATS = { Vélos: ['Route', 'VTT', 'Gravel', 'Urbain'], Accessoires: ['Casque', 'Lampe', 'Antivol'], Vêtements: ['Maillot', 'Veste', 'Gants'], Composants: ['Roue', 'Selle', 'Chaîne'], Électrique: ['VAE ville', 'VAE trekking'] };
-const MONTHS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const CATS = { Bikes: ['Road', 'Mountain', 'Gravel', 'City'], Accessories: ['Helmet', 'Light', 'Lock'], Clothing: ['Jersey', 'Jacket', 'Gloves'], Components: ['Wheel', 'Saddle', 'Chain'], Electric: ['City e-bike', 'Trekking e-bike'] };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const SELLERS = ['Amina', 'Bruno', 'Chloé', 'David', 'Elif', 'Farid', 'Greta', 'Hugo'];
-const CHANNELS = ['Magasin', 'Web', 'Revendeur'];
+const CHANNELS = ['Store', 'Web', 'Reseller'];
 
 function generate() {
   let s = 42;
@@ -24,7 +24,7 @@ function generate() {
   const pick = (a, w) => (w ? a[w(rnd())] : a[Math.floor(rnd() * a.length)]);
   const customers = Array.from({ length: 120 }, (_, i) => {
     const c = CITIES[Math.floor(Math.pow(rnd(), 1.4) * CITIES.length)];
-    return { name: `${['Cycles', 'Atelier', 'Roue', 'Vélo', 'Sport', 'Pignon'][i % 6]} ${['Nord', 'Sud', 'Central', 'Express', 'Plus', 'Pro', 'Club', 'Libre'][Math.floor(i / 6) % 8]} ${i + 1}`, city: c, size: 0.3 + rnd() * 2.5 };
+    return { name: `${['Cycles', 'Workshop', 'Wheels', 'Bike', 'Sport', 'Gear'][i % 6]} ${['North', 'South', 'Central', 'Express', 'Plus', 'Pro', 'Club', 'Free'][Math.floor(i / 6) % 8]} ${i + 1}`, city: c, size: 0.3 + rnd() * 2.5 };
   });
   const rows = [];
   for (const year of [2023, 2024, 2025]) {
@@ -34,14 +34,14 @@ function generate() {
       for (let k = 0; k < n; k++) {
         const cu = customers[Math.floor(Math.pow(rnd(), 1.6) * customers.length)];
         const cat = pick(Object.keys(CATS));
-        const price = { Vélos: 1400, Accessoires: 60, Vêtements: 90, Composants: 180, Électrique: 2600 }[cat] * (0.6 + rnd() * 0.9);
+        const price = { Bikes: 1400, Accessories: 60, Clothing: 90, Components: 180, Electric: 2600 }[cat] * (0.6 + rnd() * 0.9);
         const qty = 1 + Math.floor(rnd() * 4 * cu.size);
         const sales = price * qty;
         rows.push({
-          Région: cu.city[2], Pays: cu.city[1], Ville: cu.city[0], Latitude: cu.city[3], Longitude: cu.city[4],
-          Catégorie: cat, Produit: pick(CATS[cat]), Année: String(year), Mois: MONTHS[m], 'Année-Mois': `${year} ${MONTHS[m]}`,
-          Client: cu.name, Vendeur: pick(SELLERS), Canal: pick(CHANNELS),
-          Ventes: sales, Marge: sales * (0.08 + rnd() * 0.3 + (cat === 'Accessoires' ? 0.15 : 0)), Quantité: qty, Commande: rows.length,
+          Region: cu.city[2], Country: cu.city[1], City: cu.city[0], Latitude: cu.city[3], Longitude: cu.city[4],
+          Category: cat, Product: pick(CATS[cat]), Year: String(year), Month: MONTHS[m], 'Year-Month': `${year} ${MONTHS[m]}`,
+          Customer: cu.name, Seller: pick(SELLERS), Channel: pick(CHANNELS),
+          Sales: sales, Margin: sales * (0.08 + rnd() * 0.3 + (cat === 'Accessories' ? 0.15 : 0)), Quantity: qty, Order: rows.length,
         });
       }
     }
@@ -49,14 +49,14 @@ function generate() {
   return rows;
 }
 
-const money = new Intl.NumberFormat('fr-BE', { maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const sum = (k) => (rows) => rows.reduce((a, r) => a + r[k], 0);
 export const DEMO_MEASURES = {
-  ventes: { label: 'Ventes €', fn: sum('Ventes'), fmt: (n) => `${money.format(n)} €` },
-  marge: { label: 'Marge €', fn: sum('Marge'), fmt: (n) => `${money.format(n)} €` },
-  margePct: { label: 'Marge %', fn: (r) => sum('Marge')(r) / (sum('Ventes')(r) || 1), fmt: (n) => `${(n * 100).toFixed(1)} %` },
-  commandes: { label: 'Commandes', fn: (r) => r.length, fmt: (n) => money.format(n) },
-  quantite: { label: 'Quantité', fn: sum('Quantité'), fmt: (n) => money.format(n) },
+  sales: { label: 'Sales €', fn: sum('Sales'), fmt: (n) => `€${money.format(n)}` },
+  margin: { label: 'Margin €', fn: sum('Margin'), fmt: (n) => `€${money.format(n)}` },
+  marginPct: { label: 'Margin %', fn: (r) => sum('Margin')(r) / (sum('Sales')(r) || 1), fmt: (n) => `${(n * 100).toFixed(1)}%` },
+  orders: { label: 'Orders', fn: (r) => r.length, fmt: (n) => money.format(n) },
+  quantity: { label: 'Quantity', fn: sum('Quantity'), fmt: (n) => money.format(n) },
   lat: { label: 'Latitude', fn: (r) => r[0]?.Latitude ?? NaN, fmt: String },
   lon: { label: 'Longitude', fn: (r) => r[0]?.Longitude ?? NaN, fmt: String },
 };
@@ -74,7 +74,7 @@ export const SNAPSHOT_MEASURES = {
 };
 
 export function connectDemo() {
-  return engine({ kind: 'demo', title: 'Démo — ventes de vélos', rows: generate(), measures: DEMO_MEASURES });
+  return engine({ kind: 'demo', title: 'Demo — bike sales', rows: generate(), measures: DEMO_MEASURES });
 }
 
 export async function connectSnapshot(url) {
@@ -87,7 +87,7 @@ export async function connectSnapshot(url) {
     r.Longitude = d.measures.Longitude[i];
     return r;
   });
-  return engine({ kind: 'snapshot', title: `${d.title} — copie publique`, exported: d.exported, rows, measures: SNAPSHOT_MEASURES });
+  return engine({ kind: 'snapshot', title: `${d.title} — public copy`, exported: d.exported, rows, measures: SNAPSHOT_MEASURES });
 }
 
 function engine({ kind, title, exported, rows, measures: MEASURES }) {
@@ -152,7 +152,7 @@ function engine({ kind, title, exported, rows, measures: MEASURES }) {
           const out = values[f].map((text, elem) => {
             const state = own ? (own.has(elem) ? 'S' : ignoringSelf.has(elem) ? 'A' : 'X') : all.has(elem) ? 'O' : 'X';
             return { text, elem, state, num: NaN };
-          }).filter((r) => r.text !== '').sort((a, b) => rank[a.state] - rank[b.state] || a.text.localeCompare(b.text, 'fr', { numeric: true }));
+          }).filter((r) => r.text !== '').sort((a, b) => rank[a.state] - rank[b.state] || a.text.localeCompare(b.text, 'en', { numeric: true }));
           return { title: dim.label ?? f, rows: out, total: out.length, selected: own?.size ?? 0 };
         },
         select: async (elem) => toggle(f, elem),
@@ -194,7 +194,7 @@ function engine({ kind, title, exported, rows, measures: MEASURES }) {
               field: f,
               count: set.size,
               total: values[f].length,
-              text: set.size <= 3 ? [...set].map((e) => values[f][e]).join(', ') : `${set.size} sur ${values[f].length}`,
+              text: set.size <= 3 ? [...set].map((e) => values[f][e]).join(', ') : `${set.size} of ${values[f].length}`,
             })),
           };
         },

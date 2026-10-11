@@ -130,8 +130,8 @@ async function chooseSource() {
   const status = await fetch('/qlik-status').then((r) => (r.ok ? r.json() : null)).catch(() => null) ?? { configured: false };
   hosted = !status.configured || params.get('auth') === 'oauth';
   ui.app.innerHTML = '';
-  ui.app.add(new Option('Sales Analysis — copie publique (sans compte)', 'snapshot'));
-  ui.app.add(new Option('Démo hors ligne (données d\'exemple)', 'demo'));
+  ui.app.add(new Option('Sales Analysis — public copy (no account)', 'snapshot'));
+  ui.app.add(new Option('Offline demo (sample data)', 'demo'));
   if (hosted) return chooseHosted();
   const wanted = params.get('app') ?? status.appId;
   presence.start();
@@ -146,8 +146,8 @@ async function chooseSource() {
   ui.app.addEventListener('change', () => { location.search = `?app=${ui.app.value}`; });
   if (!wanted || wanted === 'demo') return connectDemo();
   if (wanted === 'snapshot') return connectSnapshot(snapshotUrl);
-  setStatus(`Connexion au moteur Qlik (${status.tenant})…`);
-  if (!status.configured) throw new Error('proxy Qlik non configuré : ajoutez QLIK_API_KEY dans .env.local (voir README)');
+  setStatus(`Connecting to the Qlik engine (${status.tenant})…`);
+  if (!status.configured) throw new Error('Qlik proxy not configured: add QLIK_API_KEY to .env.local (see README)');
   return connectQlik(wanted);
 }
 
@@ -165,13 +165,13 @@ async function chooseHosted() {
   if (wanted === 'snapshot') return connectSnapshot(snapshotUrl);
   if (!accessToken()) {
     ui.panel.classList.remove('collapsed');
-    throw Object.assign(new Error(`Connectez-vous avec votre compte Qlik Cloud (${HOSTED.tenant}) pour charger ces données en direct — ou choisissez la copie publique.`), { quiet: true });
+    throw Object.assign(new Error(`Sign in with your Qlik Cloud account (${HOSTED.tenant}) to load live data — or pick the public copy.`), { quiet: true });
   }
   listApps(rest).then((apps) => {
     for (const a of apps) ui.app.add(new Option(a.name, a.id));
     ui.app.value = wanted;
   }).catch((e) => setStatus(e.message, true));
-  setStatus(`Connexion au moteur Qlik (${HOSTED.tenant})…`);
+  setStatus(`Connecting to the Qlik engine (${HOSTED.tenant})…`);
   return connectQlik(wanted, await websocketUrl(wanted));
 }
 
@@ -179,10 +179,10 @@ async function build() {
   await fontReady;
   source = await chooseSource();
   cfg = await configFor(source);
-  source.onDisconnect = () => setStatus('Connexion au moteur Qlik perdue — rechargez la page.', true);
-  setStatus(`${source.title} · création des objets…`);
+  source.onDisconnect = () => setStatus('Lost connection to the Qlik engine — please reload the page.', true);
+  setStatus(`${source.title} · creating objects…`);
 
-  const title = label(`${source.title}  ·  ${{ qlik: 'Qlik Cloud', snapshot: `données du ${source.exported}`, demo: 'démo' }[source.kind]}`, { size: 0.13, color: Q.ink });
+  const title = label(`${source.title}  ·  ${{ qlik: 'Qlik Cloud', snapshot: `data as of ${source.exported}`, demo: 'demo' }[source.kind]}`, { size: 0.13, color: Q.ink });
   title.position.set(0, 3.26, -3.45);
   scene.add(title);
 
@@ -247,12 +247,12 @@ async function build() {
     });
   }
 
-  if (source.kind !== 'qlik') document.getElementById('room-note').textContent = 'Dans la pièce — ces données sont calculées sur chaque appareil : chacun garde ses propres sélections.';
+  if (source.kind !== 'qlik') document.getElementById('room-note').textContent = 'In the room — this data is computed on each device: everyone keeps their own selections.';
   source.onChange(refresh);
   await refresh();
-  const how = { qlik: 'connecté au moteur Qlik Cloud', snapshot: `données figées au ${source.exported}, recalculées dans votre navigateur`, demo: 'données de démonstration' }[source.kind];
-  setStatus(`${source.title} · ${how} — sélectionnez !`);
-  send(`app ${source.title} prête`);
+  const how = { qlik: 'connected to the Qlik Cloud engine', snapshot: `data frozen on ${source.exported}, recalculated in your browser`, demo: 'demo data' }[source.kind];
+  setStatus(`${source.title} · ${how} — start selecting!`);
+  send(`app ${source.title} ready`);
 }
 
 // Après chaque sélection, le moteur invalide les objets : on relit tous les layouts et chaque visuel s'anime
@@ -315,9 +315,9 @@ function activate(p) {
 // phrase courte décrivant une action, pour les notifications des autres participants
 function describe(t, hit) {
   const r = hit.region;
-  if (t === bar && r?.tool) return { back: 'Retour', forward: 'Avancer', clearAll: 'Tout effacer' }[r.tool];
-  if (t === bar && r?.field) return `Effacer « ${r.field} »`;
-  if (r?.choice) return `Colonnes : ${r.choice.label}`;
+  if (t === bar && r?.tool) return { back: 'Back', forward: 'Forward', clearAll: 'Clear all' }[r.tool];
+  if (t === bar && r?.field) return `Clear “${r.field}”`;
+  if (r?.choice) return `Columns: ${r.choice.label}`;
   const tip = t.tooltip?.(hit);
   if (!tip?.title) return null;
   return t.data?.title ? `${tip.title} (${t.data.title})` : tip.title;
@@ -380,10 +380,10 @@ function updateGamepads(dt, xrCam) {
     const pressed = gp.buttons.map((b) => b.pressed);
     const edge = (i) => pressed[i] && !p.buttons[i];
     if (hand === 'right') {
-      if (edge(4)) { source?.forward(); announce('Avancer'); }
-      if (edge(5)) { source?.back(); announce('Retour'); }
+      if (edge(4)) { source?.forward(); announce('Forward'); }
+      if (edge(5)) { source?.back(); announce('Back'); }
     } else {
-      if (edge(5)) { source?.clearAll(); announce('Tout effacer'); }
+      if (edge(5)) { source?.clearAll(); announce('Clear all'); }
       if (edge(4)) rig.position.set(0, 0, 0), (rig.rotation.y = 0);
     }
     p.buttons = pressed;
@@ -444,7 +444,7 @@ canvas.addEventListener('wheel', (e) => {
 }, { passive: true });
 addEventListener('keydown', (e) => {
   if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
-  if (e.key === 'Backspace') { source?.back(); announce('Retour'); }
+  if (e.key === 'Backspace') { source?.back(); announce('Back'); }
 });
 
 // --- présence : les autres personnes, leurs actions, « suivre » -----------------------------------------------------
@@ -469,11 +469,11 @@ function renderPeople(people, me) {
     const dot = document.createElement('span');
     dot.className = 'dot';
     dot.style.background = p.color;
-    li.append(dot, `${p.name}${p.id === me ? ' (vous)' : ''} · ${p.device}`);
+    li.append(dot, `${p.name}${p.id === me ? ' (you)' : ''} · ${p.device}`);
     if (p.id !== me && !renderer.xr.isPresenting) {
       const b = document.createElement('button');
       b.className = 'mini';
-      b.textContent = following === p.id ? 'Arrêter' : 'Suivre';
+      b.textContent = following === p.id ? 'Stop' : 'Follow';
       b.addEventListener('click', () => follow(following === p.id ? null : p.id));
       li.append(b);
     }

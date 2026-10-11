@@ -151,7 +151,7 @@ class Tabs extends Panel {
     card(g, 3, 3, this.w - 6, this.h - 6, { r: 16 });
     const m = this.m;
     text(g, m.title, 30, 56, { size: 34, weight: 600, max: 900 });
-    text(g, 'Colonnes :', 30, 140, { size: 24, color: Q.inkMuted });
+    text(g, 'Columns:', 30, 140, { size: 24, color: Q.inkMuted });
     let x = 170;
     for (const [i, c] of m.cfg.choices.entries()) {
       const active = keyOf(c) === keyOf(m.d1);
@@ -165,7 +165,7 @@ class Tabs extends Panel {
     }
     if (m.d2) {
       const sx = 1000;
-      text(g, `Rangées : ${m.d2Title}`, sx, 56, { size: 26, color: Q.inkSoft, max: this.w - sx - 30 });
+      text(g, `Rows: ${m.d2Title}`, sx, 56, { size: 26, color: Q.inkSoft, max: this.w - sx - 30 });
     }
   }
 }
@@ -198,11 +198,11 @@ export class Matrix {
     this.tabs.draw();
     this.colLabels = [];
     this.rowLabels = [];
-    const tip = (d) => ({ title: d.text1 + (d.text2 ? ` · ${d.text2}` : ''), lines: [[this.title, d.value]], hint: 'Gâchette : sélectionner' });
+    const tip = (d) => ({ title: d.text1 + (d.text2 ? ` · ${d.text2}` : ''), lines: [[this.title, d.value]], hint: 'Trigger: select' });
     this.targets = [
       barTarget(this.bars, { select: (d) => this.model.select(0, d.elem1), tooltip: tip }),
-      labelTarget(() => this.colLabels, (u) => this.model.select(0, u.elem), (u) => ({ title: u.text, lines: [], hint: 'Gâchette : sélectionner' })),
-      labelTarget(() => this.rowLabels, (u) => this.model.select(1, u.elem), (u) => ({ title: u.text, lines: [], hint: 'Gâchette : sélectionner' })),
+      labelTarget(() => this.colLabels, (u) => this.model.select(0, u.elem), (u) => ({ title: u.text, lines: [], hint: 'Trigger: select' })),
+      labelTarget(() => this.rowLabels, (u) => this.model.select(1, u.elem), (u) => ({ title: u.text, lines: [], hint: 'Trigger: select' })),
       Object.assign(this.tabs, {
         select: (hit) => {
           const c = hit.region?.choice;
@@ -225,7 +225,7 @@ export class Matrix {
     return this.model;
   }
   apply(L) {
-    this.title = `${L.measures[0]} par ${L.dims[0]}`;
+    this.title = `${L.measures[0]} by ${L.dims[0]}`;
     this.d2Title = L.dims[1] ?? '';
     const totals = new Map();
     const rowsTot = new Map();
@@ -324,7 +324,7 @@ export class TimeRing {
     this.targets = [
       barTarget(this.bars, {
         select: (d) => this.model.select(0, d.elem),
-        tooltip: (d) => ({ title: d.text, lines: d.lines, hint: 'Gâchette : sélectionner cette période' }),
+        tooltip: (d) => ({ title: d.text, lines: d.lines, hint: 'Trigger: select this period' }),
       }),
       labelTarget(() => this.labels.children, (u) => this.model.select(0, u.elem)),
     ];
@@ -372,7 +372,7 @@ export class TimeRing {
         this.labels.add(s);
       }
     }
-    this.header.set(`${L.measures[0]} par ${L.dims[0]}`, `Le temps vous entoure : ${order.length} périodes en cercle${hasColor ? ` · couleur : ${L.measures[1]}` : ''}`,
+    this.header.set(`${L.measures[0]} by ${L.dims[0]}`, `Time surrounds you: ${order.length} periods in a circle${hasColor ? ` · colour: ${L.measures[1]}` : ''}`,
       hasColor ? { label: L.measures[1], min: textNear(L.rows, 1, lo), max: textNear(L.rows, 1, hi) } : null);
   }
   update(dt) { this.bars.update(dt); }
@@ -455,13 +455,13 @@ export class Globe {
     const spinBy = (x, dt) => { this.spin.rotation.y += x * dt * 1.6; this.idle = 0; };
     const target = barTarget(this.bars, {
       select: (d) => this.model.select(0, d.elem),
-      tooltip: (d) => ({ title: d.text, lines: d.lines, hint: 'Gâchette : sélectionner · Grip : tourner' }),
+      tooltip: (d) => ({ title: d.text, lines: d.lines, hint: 'Trigger: select · Grip: rotate' }),
       stick: (x, _y, dt) => spinBy(x, dt),
     });
     const ball = {
       intersect: (r) => { const h = r.intersectObject(this.sphere, false)[0]; return h ? { distance: h.distance + 0.01, point: h.point } : null; },
       hover() {}, leave() {}, select() {},
-      tooltip: () => ({ title: 'Globe', lines: [], hint: 'Grip ou joystick : faire tourner' }),
+      tooltip: () => ({ title: 'Globe', lines: [], hint: 'Grip or stick: rotate' }),
       stick: (x, _y, dt) => spinBy(x, dt),
     };
     target.grab = ball.grab = (ctrl) => { this.grabbed = ctrl; this.grabAngle = null; };
@@ -497,7 +497,7 @@ export class Globe {
         data: { elem: r.d[0].elem, text: r.d[0].text, lines: L.measures.slice(2).map((m, k) => [m, r.m[k + 2].text]) },
       };
     }));
-    this.header.set(`${L.measures[2]} par ${L.dims[0]}`, `${rows.length} lieux · hauteur ∝ √valeur${hasColor ? ` · couleur : ${L.measures[3]}` : ''}`,
+    this.header.set(`${L.measures[2]} by ${L.dims[0]}`, `${rows.length} places · height ∝ √value${hasColor ? ` · colour: ${L.measures[3]}` : ''}`,
       hasColor ? { label: L.measures[3], min: textNear(rows, 3, lo), max: textNear(rows, 3, hi) } : null);
   }
   update(dt) {
@@ -580,7 +580,7 @@ export class Cloud {
       hover: (hit) => { this.hovered = hit?.item ?? null; },
       leave: () => { this.hovered = null; },
       select: (hit) => { hit.item.flash = 1; this.model.select(0, hit.item.elem); },
-      tooltip: (hit) => ({ title: hit.item.text, lines: hit.item.lines, hint: 'Gâchette : sélectionner · Grip : tourner' }),
+      tooltip: (hit) => ({ title: hit.item.text, lines: hit.item.lines, hint: 'Trigger: select · Grip: rotate' }),
       stick: (x, _y, dt) => { this.spin.rotation.y += x * dt * 1.2; },
       grab: (ctrl) => { this.grabbed = ctrl; this.grabAngle = null; },
     }];
@@ -627,7 +627,7 @@ export class Cloud {
     put(label(`Z ↗ ${L.measures[2]}`, { size: 0.07 }), -h - 0.1, -h - 0.1, 0);
     put(label(fmt(2, rz[0]), { size: 0.05, color: Q.inkMuted, weight: 400 }), -h - 0.1, -h - 0.04, h * 0.92);
     put(label(fmt(2, rz[1]), { size: 0.05, color: Q.inkMuted, weight: 400 }), -h - 0.1, -h - 0.04, -h * 0.92);
-    this.header.set(`${L.dims[0]} : ${rows.length} points dans l'espace`, 'Approchez-vous, entrez dans le nuage · couleur = axe Z');
+    this.header.set(`${L.dims[0]}: ${rows.length} points in space`, 'Come closer, step into the cloud · colour = Z axis');
   }
   update(dt) {
     const a = ease(dt, 5);

@@ -15,7 +15,7 @@ export class Presence {
     this.id = (() => {
       try { return sessionStorage.getItem('vr-id') ?? (sessionStorage.setItem('vr-id', crypto.randomUUID()), sessionStorage.getItem('vr-id')); } catch { return crypto.randomUUID(); }
     })();
-    this.name = store?.getItem('vr-name') || `Invité ${Math.floor(Math.random() * 90 + 10)}`;
+    this.name = store?.getItem('vr-name') || `Guest ${Math.floor(Math.random() * 90 + 10)}`;
     let h = 0;
     for (const c of this.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
     this.color = PALETTE[h % PALETTE.length];

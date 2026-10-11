@@ -25,12 +25,12 @@ const PRESETS = {
 const dm = (key) => ({ key, label: DEMO_MEASURES[key].label });
 const df = (field) => ({ field, label: field });
 export const DEMO_CONFIG = {
-  filters: ['Année', 'Mois', 'Région', 'Catégorie', 'Canal', 'Vendeur'].map(df),
-  kpis: [dm('ventes'), dm('marge'), dm('margePct'), dm('commandes')],
-  matrix: { dims: [df('Catégorie'), df('Année')], measure: dm('ventes'), choices: ['Catégorie', 'Région', 'Vendeur', 'Canal', 'Produit'].map(df) },
-  ring: { dim: df('Année-Mois'), measure: dm('ventes'), color: dm('margePct') },
-  globe: { dim: df('Ville'), lat: dm('lat'), lon: dm('lon'), measure: dm('ventes'), color: dm('margePct') },
-  cloud: { dim: df('Client'), x: dm('ventes'), y: dm('margePct'), z: dm('commandes') },
+  filters: ['Year', 'Month', 'Region', 'Category', 'Channel', 'Seller'].map(df),
+  kpis: [dm('sales'), dm('margin'), dm('marginPct'), dm('orders')],
+  matrix: { dims: [df('Category'), df('Year')], measure: dm('sales'), choices: ['Category', 'Region', 'Seller', 'Channel', 'Product'].map(df) },
+  ring: { dim: df('Year-Month'), measure: dm('sales'), color: dm('marginPct') },
+  globe: { dim: df('City'), lat: dm('lat'), lon: dm('lon'), measure: dm('sales'), color: dm('marginPct') },
+  cloud: { dim: df('Customer'), x: dm('sales'), y: dm('marginPct'), z: dm('orders') },
 };
 
 // copie publique de Sales Analysis : même pièce que le préréglage de l'app, sur les champs exportés
@@ -55,9 +55,9 @@ async function autoConfig(source) {
   const cats = usable.filter((f) => (has(f, '$text') || (has(f, '$integer') && f.cardinal <= 12)) && f.cardinal <= 300).sort((a, b) => a.cardinal - b.cardinal);
   const nums = usable.filter((f) => has(f, '$numeric') && !has(f, '$date') && !has(f, '$timestamp') && f.cardinal > 20);
   const key = fields.find((f) => has(f, '$key'));
-  const meas = nums.slice(0, 3).map((f) => ({ expr: `Sum([${f.name}])`, label: `Somme ${f.name}` }));
-  if (key) meas.push({ expr: `Count(DISTINCT [${key.name}])`, label: `Nb ${key.name}` });
-  while (meas.length < 3) meas.push({ expr: 'Count(1)', label: 'Lignes' });
+  const meas = nums.slice(0, 3).map((f) => ({ expr: `Sum([${f.name}])`, label: `Sum of ${f.name}` }));
+  if (key) meas.push({ expr: `Count(DISTINCT [${key.name}])`, label: `# ${key.name}` });
+  while (meas.length < 3) meas.push({ expr: 'Count(1)', label: 'Rows' });
   const dim = (f) => (f ? { field: f.name, label: f.name } : null);
   const filters = cats.slice(0, 6).map(dim);
   const d1 = cats.find((f) => f.cardinal >= 4 && f.cardinal <= 20) ?? cats[0];

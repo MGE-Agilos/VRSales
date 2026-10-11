@@ -1,78 +1,78 @@
-# Qlik en VR
+# Qlik in VR
 
-Une pièce WebXR (Meta Quest 3) où l'on est **dans** ses données Qlik Cloud. Le moteur associatif de Qlik calcule tout :
-chaque sélection, faite d'un coup de gâchette sur une valeur, une barre, une tour ou un point, se propage à toute la pièce.
-Les couleurs d'état sont celles de Qlik Sense : vert = sélectionné, blanc = possible, gris clair = alternatif, gris = exclu.
+A WebXR room (Meta Quest 3, but also PC and phone) where you stand **inside** your Qlik Cloud data. The Qlik associative
+engine does all the work: every selection, made with a trigger pull on a value, a bar, a tower or a point, ripples through
+the whole room. State colours follow Qlik Sense: green = selected, white = possible, light grey = alternative,
+grey = excluded.
 
-## La pièce (vous êtes au centre)
+**Try it: https://mge-agilos.github.io/VRSales/**. No account needed.
 
-| Où | Quoi | Pourquoi en VR |
+## The room (you stand in the middle)
+
+| Where | What | Why in VR |
 |---|---|---|
-| Devant, en haut | Barre de sélections (retour / avancer / tout effacer, une puce par champ) et KPI | Les KPI « roulent » jusqu'à leur nouvelle valeur après chaque sélection |
-| Devant | **Ville de barres** : dimension 1 × dimension 2 sur une table (ex. Category × Year) | On tourne autour, on se penche ; les onglets de la table changent la dimension des colonnes |
-| À gauche | Volets de filtres en arc | Défilement au joystick |
-| À droite | **Globe** : chaque ville est une tour (hauteur = CA, couleur = marge %) | On l'attrape au grip pour le faire tourner |
-| Derrière | **Nuage 3D** : chaque client placé selon 3 mesures (X, Y, Z) | On marche dedans ; lignes de chute et ombres au sol pour lire la profondeur |
-| Tout autour | **Anneau du temps** : une tour par mois, en cercle autour de vous | Le temps vous entoure ; une période garde toujours sa place |
+| Front, top | Selection bar (back / forward / clear all, one chip per field) and KPIs | KPIs "roll" to their new value after each selection |
+| Front | **Bar city**: dimension 1 × dimension 2 on a table (e.g. Category × Year) | Walk around it, lean over it; tabs on the table switch the column dimension |
+| Left | Filter panes in an arc | Scroll with the stick |
+| Right | **Globe**: every city is a tower (height = revenue, colour = margin %) | Grab it with the grip and spin it |
+| Behind | **3D cloud**: every customer placed by 3 measures (X, Y, Z) | Walk into it; drop lines and floor shadows help read depth |
+| All around | **Ring of time**: one tower per month, in a circle around you | Time surrounds you; each period keeps its place |
 
-## Commandes
+## Controls
 
-- **Gâchette** : sélectionner (cliquer à nouveau pour désélectionner). Pincer avec les mains marche aussi.
-- **Joystick** en visant un volet : défiler. En visant le globe ou le nuage : le faire tourner.
-- **Grip** sur le globe ou le nuage : l'attraper et le faire tourner.
-- Joystick gauche : marcher. Joystick droit : pivoter de 30°.
-- **B** retour, **A** avancer, **Y** tout effacer, **X** revenir au centre.
-- Sur écran (aperçu) : glisser pour regarder, ZQSD/WASD pour se déplacer, clic pour sélectionner, molette pour défiler, ⌫ pour revenir en arrière.
+- **Trigger**: select (click again to deselect). Pinching with hand tracking works too.
+- **Stick** while pointing at a filter pane: scroll. At the globe or the cloud: rotate it.
+- **Grip** on the globe or the cloud: grab it and spin it.
+- Left stick: walk. Right stick: turn 30°.
+- **B** back, **A** forward, **Y** clear all, **X** return to the centre.
+- On PC: drag to look around, WASD to move (E/C up and down), click to select, mouse wheel to scroll, ⌫ to go back.
+- On a phone: drag to look around, on-screen joystick to move, tap to select, drag a filter pane to scroll it,
+  *Gyroscope* to look around by moving the phone.
+- The buttons at the bottom of the screen jump to each visualisation (Centre, Bar city, Filters, Globe, Cloud, Overview).
 
-## En ligne : https://mge-agilos.github.io/VRSales/
+## Online: https://mge-agilos.github.io/VRSales/
 
-La pièce est publiée sur GitHub Pages à chaque push sur `main` (`.github/workflows/pages.yml`, build `vite.pages.config.js`).
-Une page statique n'a pas de serveur : pas de proxy ni de clé API. **Chaque visiteur se connecte avec son propre compte
-Qlik Cloud** (OAuth « single-page app » + PKCE, `src/qlik-oauth.js`). Il a donc sa propre session moteur et ses propres
-sélections, et ne voit que les apps auxquelles il a accès. La présence (avatars, Suivre) n'existe qu'avec le serveur local.
+The room is published to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`, build `vite.pages.config.js`).
 
-**Sans compte, tout le monde peut tester** la *copie publique* de Sales Analysis (option par défaut, `?app=snapshot`) :
-les données de l'app sont exportées dans `assets/sales-snapshot.json` (2 329 lignes de commande : catégorie, produit, pays,
-ville, client, vendeur, fournisseur, transporteur, mois, ventes, coûts, quantités), et le moteur associatif local de
-`src/demo.js` les recalcule dans le navigateur, avec les mêmes chiffres que Qlik (1 578 642 de CA, 953 commandes). Pour
-rafraîchir la copie : `node dataviz/tools/export-snapshot.mjs` (clé API de `.env.local`), puis commit et push.
+- **Public copy (default, `?app=snapshot`), no account needed.** The data of the *Sales Analysis* app is exported to
+  `assets/sales-snapshot.json` (2,329 order lines: category, product, country, city, customer, sales rep, supplier,
+  shipper, month, sales, costs, quantities). A local associative engine (`src/demo.js`) recalculates it in the browser
+  with the same figures as Qlik (revenue 1,578,642, 953 orders). Each visitor keeps their own selections. To refresh the
+  copy, run `node dataviz/tools/export-snapshot.mjs` (uses the API key in `.env.local`), then commit and push.
+- **Live data, for accounts on the tenant.** *Live data: sign in to Qlik Cloud* uses OAuth (single-page app + PKCE,
+  `src/qlik-oauth.js`). A static page has no server, hence no proxy and no API key: each visitor signs in with their own
+  Qlik Cloud account, gets their own engine session and selections, and only sees the apps they have access to.
+- **Offline demo** (`?app=demo`): generated bike-sales data.
 
-Le client OAuth « Qlik en VR (GitHub Pages VRSales) » est déclaré sur le tenant (Administration → OAuth). Il n'accepte que
-les adresses https://mge-agilos.github.io/VRSales/ et https://localhost:5173/dataviz/ : si l'adresse de publication change,
-il faut l'ajouter dans ce client. `?app=demo` fonctionne sans connexion.
+The OAuth client "Qlik en VR (GitHub Pages VRSales)" is registered on the tenant (Administration → OAuth). It only accepts
+https://mge-agilos.github.io/VRSales/ and https://localhost:5173/dataviz/: if the site moves, add the new address there.
 
-## À plusieurs : casque, PC et téléphone dans la même pièce
+## Together: headset, PC and phones in the same room (local server)
 
-Ouvrez la même adresse (`https://<IP-du-PC>:5173/dataviz/`) sur chaque appareil connecté au même Wi-Fi, en acceptant
-l'avertissement de certificat sur chacun.
+Run the Vite dev server of the parent project on a PC, and open `https://<PC-IP>:5173/dataviz/` on every device on the
+same Wi-Fi. Accept the certificate warning on each device.
 
-- **Sélections partagées en direct.** Tous les appareils passent par la même clé, donc par la même session du moteur Qlik :
-  une sélection faite n'importe où (casque, PC, téléphone, et même Qlik Sense ouvert sur l'app) recalcule la pièce partout.
-- **Présence.** Chaque personne apparaît sous la forme d'une tête colorée, avec son nom, son appareil et un rayon vers ce
-  qu'elle vise. Ses actions s'affichent en notification (« Maxime → Germany (Country) ») : sur la page à l'écran, et devant
-  les yeux dans le casque. Le nom se règle dans le panneau.
-- **Suivre.** Depuis la liste « Dans la pièce », le bouton *Suivre* montre ce que voit une autre personne, par exemple celle
-  qui porte le casque.
-- **Sur écran.** Les boutons du bas mènent à chaque visualisation (Centre, Tableau, Filtres, Globe, Nuage, Vue d'ensemble).
-  Sur PC : ZQSD/WASD pour se déplacer, E/C pour monter et descendre. Sur téléphone : joystick, glisser pour regarder, tap
-  pour sélectionner, glisser sur un volet pour le faire défiler, et *Gyroscope* pour regarder autour de soi en bougeant le
-  téléphone.
+- **Live shared selections.** All devices go through the same API key, hence the same Qlik engine session: a selection
+  made anywhere (headset, PC, phone, even Qlik Sense open on the app) recalculates the room everywhere.
+- **Presence.** Each person appears as a coloured head with their name, device and a ray towards what they point at.
+  Their actions show up as notifications ("Maxime → Germany (Country)"), on screen and in front of your eyes in the
+  headset. Set your name in the panel.
+- **Follow.** In the *In the room* list, *Follow* shows what someone else sees, for example the person wearing the headset.
 
-La présence passe par le serveur Vite (`presence-server.js` : POST `/presence`, flux SSE `/presence/stream`), sans aucune
-dépendance. En mode `?app=demo`, chaque appareil calcule ses données localement : la présence fonctionne, mais pas le
-partage des sélections.
+Presence goes through the Vite server (`presence-server.js`: POST `/presence`, SSE stream `/presence/stream`), with no
+dependencies. It is not available on GitHub Pages. With local data (`?app=snapshot` or `?app=demo`), each device computes
+its own data: presence works, but selections are not shared.
 
-Le serveur n'est accessible qu'au réseau local, et c'est voulu : le proxy `/qlik/` agit avec la clé API. L'exposer sur
-Internet (tunnel, redirection de port) donnerait à n'importe qui l'accès aux apps Qlik de ce compte. Pour des participants
-à distance, utilisez un VPN (Tailscale, par exemple) ou ajoutez d'abord une authentification.
+The local server is meant for the local network only: the `/qlik/` proxy acts with the API key. Exposing it to the
+Internet (tunnel, port forwarding) would give anyone access to that account's Qlik apps. For remote participants, use a
+VPN (e.g. Tailscale) or add authentication first.
 
-## Connexion à Qlik Cloud
+## Connecting to Qlik Cloud (local server)
 
-Le serveur Vite sert de **proxy** : le casque parle à `https://<PC>:5173/qlik/…`, et le PC ajoute la clé API puis relaie
-vers le tenant (REST et WebSocket du moteur). La clé ne quitte jamais le PC : il n'y a ni client OAuth ni origine autorisée
-à configurer sur le tenant.
+The Vite server acts as a **proxy**: the headset talks to `https://<PC>:5173/qlik/…`, and the PC adds the API key and
+forwards to the tenant (REST and engine WebSocket). The key never leaves the PC.
 
-`../.env.local` (à la racine du projet VR, ignoré par git ; modèle dans `.env.example`) :
+`../.env.local` (at the root of the parent project, ignored by git; template in `.env.example`):
 
 ```
 QLIK_TENANT=beyond-data-group-training.de.qlikcloud.com
@@ -80,43 +80,34 @@ QLIK_API_KEY=…
 QLIK_APP_ID=771eef89-203b-47ab-a617-d5f9df6dccad
 ```
 
-- `?app=<id>` ouvre une autre app (la liste déroulante de la page d'accueil affiche les apps du tenant).
-- `?app=demo` lance des données d'exemple sur un petit moteur associatif local, sans connexion.
-- La session moteur est celle de l'utilisateur de la clé : les sélections faites en VR apparaissent aussi dans Qlik Sense
-  ouvert sur la même app, et inversement.
+- `?app=<id>` opens another app (the drop-down lists the tenant's apps).
+- The engine session belongs to the key's user: selections made in VR also show up in Qlik Sense open on the same app,
+  and vice versa.
 
-## Configurer ce qui est affiché
+## Configuring what is shown
 
-[`src/config.js`](src/config.js) contient un préréglage par app, construit sur ses éléments maîtres (`{ lib: '<id>' }`),
-ses champs (`{ field: 'City' }`) ou ses expressions (`{ expr: 'Sum(Sales)' }`). Une app sans préréglage est configurée
-automatiquement à partir de ses champs : peu de valeurs pour les filtres, `Sum()` des champs numériques comme mesures,
-champs Latitude/Longitude pour le globe, champ « mois » pour l'anneau.
+[`src/config.js`](src/config.js) holds a preset per app, built on its master items (`{ lib: '<id>' }`), fields
+(`{ field: 'City' }`) or expressions (`{ expr: 'Sum(Sales)' }`). An app without a preset is configured automatically from
+its fields: low-cardinality fields become filters, `Sum()` of numeric fields become measures, Latitude/Longitude fields
+feed the globe, and a month field feeds the ring.
 
-## Vidéo promo
+## Files
 
-`node dataviz/video/make-promo.mjs` → `video/qlik-vr-promo.mp4` (1080×1080, 1 min 51). Le script part de l'enregistrement du Quest
-`video/source-quest-20261010-224827.mp4`, coupe le menu du Quest et ajoute des cartons d'ouverture et de fin. La voix off anglaise
-(ElevenLabs, voix « Sarah », clé lue dans `film/unity/audio/.env`) est mise en cache dans `video/audio/`. La musique est
-« Digital Lemonade » de Kevin MacLeod (incompetech.com), sous licence CC BY 4.0 : le crédit figure sur le carton de fin.
-Les textes et leur minutage sont dans `LINES`, les plans gardés dans `CLIPS`.
-
-`node dataviz/video/make-promo.mjs bdg` → `video/qlik-vr-promo-beyond-data.mp4`, aux couleurs de Beyond Data Group : fond bleu nuit
-avec les arcs de la marque, police Urbanist, logo, séquence VR encadrée et sous-titres courts. Les éléments graphiques sont dessinés
-dans `video/brand/cards.html` puis rendus image par image avec Chrome (`video/brand/render.mjs`) dans `video/brand/build/`.
-
-## Fichiers
-
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `qlik-proxy.js` | Plugin Vite : proxy `/qlik/…` vers le tenant avec la clé, et `/qlik-status` |
-| `src/qlik.js` | Client JSON-RPC du moteur QIX : ListObject, HyperCube, sélections, Back/Forward/ClearAll |
-| `src/demo.js` | Moteur associatif local et données d'exemple |
-| `src/config.js` | Préréglages par app et configuration automatique |
-| `src/viz.js` | Ville de barres, anneau du temps, globe, nuage 3D |
-| `src/ui.js` | Volets de filtres, barre de sélections, KPI, info-bulle |
-| `src/panel.js` | Panneaux dessinés sur canvas, avec zones cliquables, et étiquettes 3D |
-| `src/main.js` | Scène, disposition de la pièce, manettes, souris et tactile, rafraîchissement après sélection |
-| `src/screen.js` | Navigation sans casque : points de vue, joystick tactile, clavier, gyroscope, suivre quelqu'un |
-| `src/presence.js` | Avatars des autres participants, publication de sa propre pose, notifications |
-| `presence-server.js` | Plugin Vite : relais de présence (POST + flux SSE) |
-| `assets/land-110m.json` | Contours des terres (world-atlas, Natural Earth), utilisés pour le globe |
+| `src/main.js` | Scene, room layout, controllers, mouse and touch, refresh after each selection |
+| `src/qlik.js` | Minimal JSON-RPC client for the QIX engine: ListObject, HyperCube, selections, Back/Forward/ClearAll |
+| `src/qlik-oauth.js` | Qlik Cloud sign-in for the hosted page (OAuth SPA + PKCE, engine token exchange) |
+| `src/demo.js` | Local associative engine: public copy of Sales Analysis and demo data |
+| `src/config.js` | Per-app presets and automatic configuration |
+| `src/viz.js` | Bar city, ring of time, globe, 3D cloud |
+| `src/ui.js` | Filter panes, selection bar, KPIs, tooltip, notifications |
+| `src/panel.js` | Canvas-drawn panels with clickable regions, 3D labels |
+| `src/screen.js` | Navigation without a headset: viewpoints, touch joystick, keyboard, gyroscope, follow someone |
+| `src/presence.js` | Other participants' avatars, publishing your own pose, notifications |
+| `qlik-proxy.js` | Vite plugin (local server): `/qlik/…` proxy to the tenant with the key, and `/qlik-status` |
+| `presence-server.js` | Vite plugin (local server): presence relay (POST + SSE stream) |
+| `tools/export-snapshot.mjs` | Exports the public copy of Sales Analysis |
+| `assets/land-110m.json` | Land outlines (world-atlas, Natural Earth) for the globe |
+
+The promo video tooling (`video/`) stays local and is not published.

@@ -45,7 +45,7 @@ export async function completeLogin() {
   const q = new URLSearchParams(location.search);
   if (!q.has('code')) return false;
   const back = store.get('return') ?? redirectUri();
-  if (q.get('state') !== store.get('state')) throw new Error('connexion Qlik : réponse inattendue (state), réessayez');
+  if (q.get('state') !== store.get('state')) throw new Error('Qlik sign-in: unexpected response (state), please try again');
   const res = await fetch(`${base}/oauth/token`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -54,7 +54,7 @@ export async function completeLogin() {
   const data = await res.json().catch(() => ({}));
   store.set('verifier', null);
   store.set('state', null);
-  if (!res.ok || !data.access_token) throw new Error(`connexion Qlik refusée : ${data.errors?.[0]?.detail ?? data.error_description ?? res.status}`);
+  if (!res.ok || !data.access_token) throw new Error(`Qlik sign-in refused: ${data.errors?.[0]?.detail ?? data.error_description ?? res.status}`);
   store.set('token', { value: data.access_token, expires: Date.now() + (data.expires_in ?? 3600) * 1000 - 60000 });
   history.replaceState(null, '', back);
   return true;
@@ -77,14 +77,14 @@ export async function websocketUrl(appId) {
     }),
   });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401 || res.status === 403) { logout(); throw new Error('session Qlik expirée — reconnectez-vous'); }
-  if (!res.ok || !data.access_token) throw new Error(`jeton moteur refusé : ${data.errors?.[0]?.detail ?? res.status}`);
+  if (res.status === 401 || res.status === 403) { logout(); throw new Error('Qlik session expired — please sign in again'); }
+  if (!res.ok || !data.access_token) throw new Error(`engine token refused: ${data.errors?.[0]?.detail ?? res.status}`);
   return `wss://${HOSTED.tenant}/app/${appId}?accessToken=${encodeURIComponent(data.access_token)}`;
 }
 
 export async function rest(path) {
   const res = await fetch(`${base}${path}`, { headers: { authorization: `Bearer ${accessToken()}` } });
-  if (res.status === 401) { logout(); throw new Error('session Qlik expirée — reconnectez-vous'); }
+  if (res.status === 401) { logout(); throw new Error('Qlik session expired — please sign in again'); }
   if (!res.ok) throw new Error(`Qlik ${path} : HTTP ${res.status}`);
   return res.json();
 }

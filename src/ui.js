@@ -23,7 +23,7 @@ export class ListBox extends Panel {
     const d = this.data;
     card(g, 3, 3, w - 6, h - 6, { r: 18, stroke: d.selected ? Q.green : Q.line });
     text(g, d.title, 26, 50, { size: 36, weight: 600, max: w - 120 });
-    text(g, d.selected ? `${d.selected} sur ${d.total} sélectionné${d.selected > 1 ? 's' : ''}` : `${d.total} valeurs`, 26, 92, { size: 23, color: d.selected ? Q.greenDark : Q.inkMuted });
+    text(g, d.selected ? `${d.selected} of ${d.total} selected` : `${d.total} values`, 26, 92, { size: 23, color: d.selected ? Q.greenDark : Q.inkMuted });
     if (d.selected) {
       const x = w - 84, y = 24, s = 58;
       rrect(g, x, y, s, s, 12);
@@ -85,8 +85,8 @@ export class ListBox extends Panel {
   tooltip(hit) {
     const r = hit.region;
     if (!r || r.elem === undefined) return null;
-    const label = { S: 'sélectionné', L: 'verrouillé', O: 'possible', A: 'alternatif', X: 'exclu', XS: 'exclu', XL: 'exclu' }[r.state] ?? '';
-    return { title: r.text, lines: [[this.data.title, label]], hint: 'Gâchette : sélectionner · Joystick : défiler' };
+    const label = { S: 'selected', L: 'locked', O: 'possible', A: 'alternative', X: 'excluded', XS: 'excluded', XL: 'excluded' }[r.state] ?? '';
+    return { title: r.text, lines: [[this.data.title, label]], hint: 'Trigger: select · Stick: scroll' };
   }
 }
 
@@ -105,9 +105,9 @@ export class SelectionBar extends Panel {
     const d = this.data;
     card(g, 3, 3, w - 6, h - 6, { r: 20 });
     const tools = [
-      ['back', 'Retour', d.back, (x, y) => { g.moveTo(x + 14, y - 14); g.lineTo(x - 2, y); g.lineTo(x + 14, y + 14); g.moveTo(x - 2, y); g.lineTo(x + 30, y); }],
-      ['forward', 'Avancer', d.forward, (x, y) => { g.moveTo(x + 14, y - 14); g.lineTo(x + 30, y); g.lineTo(x + 14, y + 14); g.moveTo(x - 2, y); g.lineTo(x + 30, y); }],
-      ['clearAll', 'Tout effacer', d.items.length > 0, (x, y) => { g.moveTo(x, y - 14); g.lineTo(x + 28, y + 14); g.moveTo(x + 28, y - 14); g.lineTo(x, y + 14); }],
+      ['back', 'Back', d.back, (x, y) => { g.moveTo(x + 14, y - 14); g.lineTo(x - 2, y); g.lineTo(x + 14, y + 14); g.moveTo(x - 2, y); g.lineTo(x + 30, y); }],
+      ['forward', 'Forward', d.forward, (x, y) => { g.moveTo(x + 14, y - 14); g.lineTo(x + 30, y); g.lineTo(x + 14, y + 14); g.moveTo(x - 2, y); g.lineTo(x + 30, y); }],
+      ['clearAll', 'Clear all', d.items.length > 0, (x, y) => { g.moveTo(x, y - 14); g.lineTo(x + 28, y + 14); g.moveTo(x + 28, y - 14); g.lineTo(x, y + 14); }],
     ];
     tools.forEach(([id, name, enabled, icon], i) => {
       const x = 16 + i * 150, y = 16, bw = 140, bh = h - 32;
@@ -125,7 +125,7 @@ export class SelectionBar extends Panel {
     g.fillRect(476, 26, 2, h - 52);
     const x0 = 500, cw = 460, gap = 14, room = Math.floor((w - x0 - 20 + gap) / (cw + gap));
     if (!d.items.length) {
-      text(g, 'Aucune sélection — visez une valeur, une barre, une tour ou un point et appuyez sur la gâchette', x0 + 10, h / 2 - 16, { size: 28, color: Q.inkSoft, max: w - x0 - 40 });
+      text(g, 'No selections — point at a value, a bar, a tower or a point and pull the trigger', x0 + 10, h / 2 - 16, { size: 28, color: Q.inkSoft, max: w - x0 - 40 });
       text(g, this.status, x0 + 10, h / 2 + 26, { size: 22, color: Q.inkMuted, max: w - x0 - 40 });
     }
     d.items.slice(0, room).forEach((it, i) => {
@@ -133,7 +133,7 @@ export class SelectionBar extends Panel {
       const more = i === room - 1 && d.items.length > room ? d.items.length - room + 1 : 0;
       card(g, x, y, cw, ch, { r: 10, fill: this.hoverId === `chip${i}` ? '#f5f6f7' : '#ffffff' });
       if (more) {
-        text(g, `+ ${more} autres champs`, x + 24, y + ch / 2, { size: 28, color: Q.inkSoft });
+        text(g, `+ ${more} more fields`, x + 24, y + ch / 2, { size: 28, color: Q.inkSoft });
         return;
       }
       text(g, it.field, x + 22, y + 40, { size: 27, color: Q.inkMuted, max: cw - 90 });
@@ -162,8 +162,8 @@ export class SelectionBar extends Panel {
   }
   tooltip(hit) {
     const r = hit.region;
-    if (r?.field) return { title: r.field, lines: [['Sélection', r.text]], hint: 'Gâchette : effacer ce champ' };
-    if (r?.tool) return { title: { back: 'Retour (bouton B)', forward: 'Avancer (bouton A)', clearAll: 'Tout effacer (bouton Y)' }[r.tool], lines: [] };
+    if (r?.field) return { title: r.field, lines: [['Selection', r.text]], hint: 'Trigger: clear this field' };
+    if (r?.tool) return { title: { back: 'Back (B button)', forward: 'Forward (A button)', clearAll: 'Clear all (Y button)' }[r.tool], lines: [] };
     return null;
   }
 }

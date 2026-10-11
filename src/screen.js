@@ -6,11 +6,11 @@ import * as THREE from 'three';
 
 export const VIEWS = {
   centre: { label: 'Centre', pos: [0, 1.6, 0], look: [0, 1.6, -3] },
-  tableau: { label: 'Tableau', pos: [0, 1.85, 0.3], look: [0, 1.75, -3.2] },
-  filtres: { label: 'Filtres', pos: [0.2, 1.45, 0.1], look: [-2.3, 1.35, -0.9] },
+  tableau: { label: 'Bar city', pos: [0, 1.85, 0.3], look: [0, 1.75, -3.2] },
+  filtres: { label: 'Filters', pos: [0.2, 1.45, 0.1], look: [-2.3, 1.35, -0.9] },
   globe: { label: 'Globe', pos: [1.05, 1.55, -0.55], look: [2.17, 1.35, -1.25] },
-  nuage: { label: 'Nuage', pos: [0, 1.6, 1.3], look: [0, 1.45, 3.4] },
-  temps: { label: 'Vue d\'ensemble', pos: [0, 6.5, 7.5], look: [0, 0.8, -1] },
+  nuage: { label: 'Cloud', pos: [0, 1.6, 1.3], look: [0, 1.45, 3.4] },
+  temps: { label: 'Overview', pos: [0, 6.5, 7.5], look: [0, 0.8, -1] },
 };
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -105,7 +105,7 @@ export class ScreenNav {
       return false;
     }
     if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-      if ((await DeviceOrientationEvent.requestPermission()) !== 'granted') throw new Error('accès au gyroscope refusé');
+      if ((await DeviceOrientationEvent.requestPermission()) !== 'granted') throw new Error('gyroscope access denied');
     }
     const euler = new THREE.Euler(), q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
     const zee = new THREE.Vector3(0, 0, 1);

@@ -42,5 +42,5 @@ export function stateStyle(state) {
   }
 }
 
-const compactFmt = new Intl.NumberFormat('fr-BE', { notation: 'compact', maximumFractionDigits: 1 });
+const compactFmt = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
 export const compact = (n) => (Number.isFinite(n) ? compactFmt.format(n) : '–');

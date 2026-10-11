@@ -18,16 +18,16 @@ class Qix {
   open() {
     return new Promise((resolve, reject) => {
       const ws = (this.ws = new WebSocket(this.url));
-      ws.onerror = () => reject(new Error('WebSocket Qlik indisponible (proxy /qlik non configuré ?)'));
+      ws.onerror = () => reject(new Error('Qlik WebSocket unavailable (is the /qlik proxy configured?)'));
       ws.onclose = (e) => {
-        for (const p of this.pending.values()) p.reject(new Error('connexion fermée'));
+        for (const p of this.pending.values()) p.reject(new Error('connection closed'));
         this.pending.clear();
         this.onClose?.(e);
       };
       ws.onmessage = (e) => {
         const m = JSON.parse(e.data);
         if (m.method === 'OnConnected') return resolve();
-        if (m.method === 'OnAuthenticationInformation' && m.params?.mustAuthenticate) return reject(new Error('authentification refusée par Qlik Cloud'));
+        if (m.method === 'OnAuthenticationInformation' && m.params?.mustAuthenticate) return reject(new Error('authentication refused by Qlik Cloud'));
         if (m.change?.length || m.close?.length) this.notify(m.change ?? []);
         if (m.id && this.pending.has(m.id)) {
           const p = this.pending.get(m.id);
@@ -169,6 +169,6 @@ export async function connectQlik(appId, url) {
 }
 
 // get(path) : appel REST authentifié ; par défaut via le proxy du serveur Vite
-export async function listApps(get = async (p) => { const r = await fetch(`/qlik${p}`); if (!r.ok) throw new Error(`liste des apps : HTTP ${r.status}`); return r.json(); }) {
+export async function listApps(get = async (p) => { const r = await fetch(`/qlik${p}`); if (!r.ok) throw new Error(`app list: HTTP ${r.status}`); return r.json(); }) {
   return (await get('/api/v1/items?resourceType=app&limit=100')).data.map((it) => ({ id: it.resourceId, name: it.name })).sort((a, b) => a.name.localeCompare(b.name));
 }
