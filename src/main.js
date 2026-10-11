@@ -12,6 +12,7 @@ import { label } from './panel.js';
 import { Q, FONT } from './theme.js';
 import { Presence } from './presence.js';
 import { ScreenNav, VIEWS } from './screen.js';
+import { ARMode } from './ar.js';
 
 // « Qlik en VR » : une pièce où l'on est dans ses données. Le moteur associatif de Qlik Cloud calcule tout ;
 // chaque sélection (gâchette sur une valeur, une barre, une tour, un point) se propage instantanément à tous
@@ -36,6 +37,9 @@ const params = new URLSearchParams(location.search);
 const ui = {
   vr: document.getElementById('enter-vr'),
   ar: document.getElementById('enter-ar'),
+  arRoom: document.getElementById('enter-ar-room'),
+  arNote: document.getElementById('ar-note'),
+  arOverlay: document.getElementById('ar-overlay'),
   status: document.getElementById('status'),
   app: document.getElementById('app'),
   panel: document.getElementById('panel'),
@@ -83,6 +87,9 @@ scene.add(sun);
 
 const rig = new THREE.Group(); // l'utilisateur (tête + manettes) : on le déplace pour marcher dans les données
 scene.add(rig);
+// everything in the room lives in `world`: identity in VR, moved and shrunk as a miniature in AR (ar.js)
+const world = new THREE.Group();
+scene.add(world);
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.02, 60);
 camera.position.set(0, 1.6, 0);
 rig.add(camera);
@@ -184,14 +191,14 @@ async function build() {
 
   const title = label(`${source.title}  ·  ${{ qlik: 'Qlik Cloud', snapshot: `data as of ${source.exported}`, demo: 'demo' }[source.kind]}`, { size: 0.13, color: Q.ink });
   title.position.set(0, 3.26, -3.45);
-  scene.add(title);
+  world.add(title);
 
   // sélections + KPI, au-dessus de la table
   bar = new SelectionBar(source);
   bar.mesh.position.set(0, 2.82, -3.4);
   bar.mesh.scale.setScalar(1.25);
   bar.mesh.rotation.x = 0.14;
-  scene.add(bar.mesh);
+  world.add(bar.mesh);
   targets.push(bar);
   bindings.push({ widget: bar, model: await source.selections(), apply: (l) => bar.apply(l) });
 
@@ -201,7 +208,7 @@ async function build() {
       k.mesh.position.set((i - (kpis.length - 1) / 2) * 0.88, 2.26, -3.42);
       k.mesh.scale.setScalar(1.25);
       k.mesh.rotation.x = 0.1;
-      scene.add(k.mesh);
+      world.add(k.mesh);
       widgets.push(k);
     });
     const model = await source.cube({ measures: cfg.kpis });
@@ -217,14 +224,14 @@ async function build() {
     lb.mesh.position.set(Math.sin(a) * R, 1.32, -Math.cos(a) * R);
     lb.mesh.lookAt(0, 1.32, 0);
     lb.mesh.scale.setScalar(1.15);
-    scene.add(lb.mesh);
+    world.add(lb.mesh);
     targets.push(lb);
     bindings.push({ model, apply: (l) => lb.apply(l) });
   }
 
   const add = async (widget, place) => {
     place(widget.group);
-    scene.add(widget.group);
+    world.add(widget.group);
     widgets.push(widget);
     targets.push(...widget.targets);
     bindings.push({ widget, model: await widget.bind(source), apply: (l) => widget.apply(l) });
@@ -296,7 +303,8 @@ for (let i = 0; i < 2; i++) {
   const p = { id: i, ctrl, laser, dot, current: null, input: null, buttons: [], turnLatch: false };
   ctrl.addEventListener('connected', (e) => { p.input = e.data; laser.visible = e.data.targetRayMode === 'tracked-pointer'; });
   ctrl.addEventListener('disconnected', () => { p.input = null; });
-  ctrl.addEventListener('selectstart', () => activate(p));
+  ctrl.addEventListener('selectstart', () => { if (p.input?.targetRayMode !== 'screen') activate(p); });
+  ctrl.addEventListener('select', () => { if (p.input?.targetRayMode === 'screen') activate(p); });
   ctrl.addEventListener('squeezestart', () => p.current?.t.grab?.(ctrl));
   ctrl.addEventListener('squeezeend', () => widgets.forEach((w) => w.grabbed === ctrl && w.release()));
   pointers.push(p);
@@ -304,6 +312,7 @@ for (let i = 0; i < 2; i++) {
 const mouse = { id: 'mouse', ndc: new THREE.Vector2(9, 9), current: null };
 
 function activate(p) {
+  if (ar.active && !ar.placed) return ar.place(true); // first tap / trigger in AR: put the miniature down
   const cur = p.current;
   if (!cur?.t.select) return;
   const what = describe(cur.t, cur.hit);
@@ -384,12 +393,13 @@ function updateGamepads(dt, xrCam) {
       if (edge(5)) { source?.back(); announce('Back'); }
     } else {
       if (edge(5)) { source?.clearAll(); announce('Clear all'); }
-      if (edge(4)) rig.position.set(0, 0, 0), (rig.rotation.y = 0);
+      if (edge(4)) { if (ar.active) ar.place(false); else rig.position.set(0, 0, 0), (rig.rotation.y = 0); }
     }
     p.buttons = pressed;
     const active = Math.abs(x) > 0.15 || Math.abs(y) > 0.15;
     if (!active) { p.turnLatch = false; continue; }
     if (p.current?.t.stick) { p.current.t.stick(x, y, dt); continue; }
+    if (ar.active) { if (hand === 'left') ar.stick(x, y, dt); continue; }
     if (hand === 'left') {
       // marcher : direction du regard, à plat
       const fwd = new THREE.Vector3();
@@ -448,7 +458,7 @@ addEventListener('keydown', (e) => {
 });
 
 // --- présence : les autres personnes, leurs actions, « suivre » -----------------------------------------------------
-const presence = new Presence(scene);
+const presence = new Presence(world); // avatars live in room coordinates, so they shrink with the miniature too
 nav.lateral = ((parseInt(presence.id.slice(0, 4), 16) % 100) / 100 - 0.5) * 1.0;
 const toasts = new Toasts();
 camera.add(toasts.mesh);
@@ -510,37 +520,58 @@ if (coarse) {
 document.getElementById('panel-toggle').addEventListener('click', () => ui.panel.classList.toggle('collapsed'));
 
 // --- WebXR ------------------------------------------------------------------------------------------------------
+const ar = new ARMode({ renderer, scene, world, overlay: ui.arOverlay });
+// mode: 'vr' | 'ar-table' (miniature on a real surface) | 'ar-room' (full size around you)
 async function enter(mode) {
-  const session = await navigator.xr.requestSession(mode, { requiredFeatures: ['local-floor'], optionalFeatures: ['hand-tracking', 'layers'] });
-  const ar = mode === 'immersive-ar';
-  scene.background = ar ? null : background;
-  scene.fog = ar ? null : new THREE.Fog(Q.room, 9, 22);
-  floor.visible = !ar;
+  const isAR = mode !== 'vr';
+  const session = isAR
+    ? await navigator.xr.requestSession('immersive-ar', {
+      optionalFeatures: ['local-floor', 'hit-test', 'dom-overlay', 'hand-tracking', 'anchors'],
+      domOverlay: { root: ui.arOverlay },
+    })
+    : await navigator.xr.requestSession('immersive-vr', { requiredFeatures: ['local-floor'], optionalFeatures: ['hand-tracking', 'layers'] });
+  // phones often only offer 'local' (origin at the phone); the headset offers 'local-floor'
+  renderer.xr.setReferenceSpaceType(!isAR || (session.enabledFeatures?.includes('local-floor') ?? true) ? 'local-floor' : 'local');
+  scene.background = isAR ? null : background;
+  scene.fog = isAR ? null : new THREE.Fog(Q.room, 9, 22);
+  floor.visible = spot.visible = !isAR;
+  if (isAR) {
+    rig.position.set(0, 0, 0);
+    rig.rotation.set(0, 0, 0);
+    ui.arOverlay.hidden = false;
+    session.addEventListener('end', () => { ui.arOverlay.hidden = true; spot.visible = true; });
+  }
   follow(null);
   session.addEventListener('end', () => { scene.background = background; scene.fog = new THREE.Fog(Q.room, 9, 22); floor.visible = true; nav.syncTarget(); });
   await renderer.xr.setSession(session);
+  if (isAR) await ar.start(session, mode === 'ar-table' ? 'table' : 'room');
   send(`session ${mode}`);
 }
-ui.vr.addEventListener('click', () => enter('immersive-vr').catch((e) => setStatus(e.message, true)));
-ui.ar.addEventListener('click', () => enter('immersive-ar').catch((e) => setStatus(e.message, true)));
+ui.vr.addEventListener('click', () => enter('vr').catch((e) => setStatus(e.message, true)));
+ui.ar.addEventListener('click', () => enter('ar-table').catch((e) => setStatus(e.message, true)));
+ui.arRoom.addEventListener('click', () => enter('ar-room').catch((e) => setStatus(e.message, true)));
 if (navigator.xr) {
   navigator.xr.isSessionSupported('immersive-vr').then((ok) => { ui.vr.disabled = !ok; });
-  navigator.xr.isSessionSupported('immersive-ar').then((ok) => { ui.ar.disabled = !ok; });
-}
+  navigator.xr.isSessionSupported('immersive-ar').then((ok) => {
+    ui.ar.disabled = ui.arRoom.disabled = !ok;
+    ui.arNote.hidden = ok;
+  });
+} else ui.arNote.hidden = false;
 addEventListener('resize', () => {
   if (renderer.xr.isPresenting) return;
   nav.resize(innerWidth, innerHeight);
   renderer.setSize(innerWidth, innerHeight, false);
 });
 
-if (import.meta.env.DEV) window.__vr = { camera, controls, nav, presence, refresh, get source() { return source; } }; // inspection depuis la console
+if (import.meta.env.DEV) window.__vr = { camera, controls, nav, presence, world, ar, refresh, get source() { return source; } }; // inspection depuis la console
 
 const clock = new THREE.Clock();
-renderer.setAnimationLoop(() => {
+renderer.setAnimationLoop((time, frame) => {
   const dt = Math.min(clock.getDelta(), 0.1);
   const xrCam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
   if (renderer.xr.isPresenting) updateGamepads(dt, xrCam);
   else nav.update(dt);
+  ar.update(frame, xrCam);
   for (const w of widgets) w.update(dt);
   presence.update(dt, xrCam.getWorldPosition(new THREE.Vector3()));
   toasts.update(dt, renderer.xr.isPresenting);
@@ -548,7 +579,7 @@ renderer.setAnimationLoop(() => {
   updatePointers(xrCam);
   const vr = renderer.xr.isPresenting;
   const aimer = vr ? pointers.find((p) => p.current) : mouse.current && mouse;
-  presence.publish(performance.now(), {
+  presence.publish(performance.now(), world, {
     device: vr ? 'VR' : coarse ? 'Mobile' : 'PC',
     head: xrCam,
     hand: vr && aimer ? new THREE.Vector3().setFromMatrixPosition(aimer.ctrl.matrixWorld) : null,

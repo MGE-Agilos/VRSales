@@ -51,19 +51,22 @@ export class Presence {
   // annonce une action (sélection…) à tout le monde ; part avec la prochaine pose
   event(ev) { if (this.enabled) { this.pending = ev; this.last = 0; } }
 
-  // pose = { device, head: Object3D (caméra), hand?: Vector3, aim?: Vector3 }
-  publish(now, pose) {
+  // pose = { device, head: Object3D (caméra), hand?: Vector3, aim?: Vector3 }, exprimée dans le repère de `space`
+  publish(now, space, pose) {
     if (!this.enabled || now - this.last < RATE) return;
     this.last = now;
     const p = new THREE.Vector3(), q = new THREE.Quaternion();
     pose.head.getWorldPosition(p);
     pose.head.getWorldQuaternion(q);
+    space.worldToLocal(p);
+    q.premultiply(space.getWorldQuaternion(new THREE.Quaternion()).invert());
+    const local = (v) => (v ? space.worldToLocal(v.clone()) : null);
     const r = (v) => Math.round(v * 1000) / 1000;
     const msg = {
       id: this.id, name: this.name, color: this.color, device: pose.device,
       head: [p.x, p.y, p.z, q.x, q.y, q.z, q.w].map(r),
-      hand: pose.hand ? pose.hand.toArray().map(r) : null,
-      aim: pose.aim ? pose.aim.toArray().map(r) : null,
+      hand: pose.hand ? local(pose.hand).toArray().map(r) : null,
+      aim: pose.aim ? local(pose.aim).toArray().map(r) : null,
     };
     if (this.pending) { msg.event = this.pending; this.pending = null; }
     fetch('/presence', { method: 'POST', body: JSON.stringify(msg), keepalive: true }).catch(() => {});

@@ -47,6 +47,13 @@
       .toast { background: rgba(40,42,48,0.92); color: #fff; font-size: 14px; font-weight: 600; padding: 10px 12px; border-radius: 10px; border-left: 6px solid; transition: opacity .6s, transform .6s; }
       .toast.out { opacity: 0; transform: translateY(-6px); }
       @media (max-width: 600px) { #toasts { top: auto; bottom: 150px; } }
+      /* AR on a phone: buttons over the camera image */
+      #ar-overlay { position: fixed; inset: 0; pointer-events: none; font-family: "Source Sans 3", system-ui, sans-serif; }
+      #ar-overlay .ar-hint { display: none; position: absolute; top: max(24px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); margin: 0; padding: 10px 14px; border-radius: 12px; background: rgba(30,32,40,0.85); color: #fff; font-size: 15px; font-weight: 600; text-align: center; }
+      #ar-overlay.placing .ar-hint { display: block; }
+      #ar-overlay .ar-bar { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; gap: 6px; padding: 6px; border-radius: 14px; background: rgba(255,255,255,0.9); pointer-events: auto; }
+      #ar-overlay .ar-bar button { min-width: 44px; padding: 10px 12px; border-radius: 10px; background: #fff; color: var(--text); border: 1px solid var(--line); font-size: 15px; font-weight: 600; }
+      #ar-overlay .ar-bar button[data-ar="exit"] { background: var(--accent); color: #fff; border-color: var(--accent); }
     </style>
   </head>
   <body>
@@ -60,7 +67,9 @@
       <label>App<select id="app"></select></label>
       <div class="buttons">
         <button id="enter-vr" disabled>Enter VR</button>
-        <button id="enter-ar" class="secondary" disabled>In my room (passthrough)</button>
+        <button id="enter-ar" class="secondary" disabled>AR — on a table</button>
+        <button id="enter-ar-room" class="secondary" disabled>AR — life-size</button>
+        <p id="ar-note" class="sub" hidden>AR needs a Meta Quest or Chrome on Android (iPhone Safari doesn't support WebXR yet).</p>
         <button id="login" class="secondary" hidden>Live data: sign in to Qlik Cloud</button>
         <a id="home-link" class="secondary-link" href="/">← All projects</a>
       </div>
@@ -78,6 +87,7 @@
           <li><b>Grip</b> on the globe or the cloud: grab it and spin it</li>
           <li>Left stick: walk · right stick: turn 30°</li>
           <li><b>B</b> back · <b>A</b> forward · <b>Y</b> clear all · <b>X</b> return to the centre</li>
+          <li><b>AR on a table</b>: point at a surface and pull the trigger (or tap) to place the room · left stick: turn and resize it · <b>X</b>: move it again</li>
           <li>On PC: drag to look around, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move (<kbd>E</kbd>/<kbd>C</kbd> up, down), click to select, mouse wheel to scroll, <kbd>⌫</kbd> back</li>
           <li>On a phone: drag to look around, joystick to move, tap to select, drag a filter pane to scroll it, <b>Gyroscope</b> to look around by moving the phone</li>
           <li>The buttons at the bottom take you to each visualisation; <b>Follow</b> shows what someone else is seeing</li>
@@ -88,6 +98,17 @@
     <div id="joystick" aria-hidden="true"><div class="knob"></div></div>
     <button id="gyro">Gyroscope</button>
     <div id="toasts" aria-live="polite"></div>
+    <div id="ar-overlay" hidden>
+      <p class="ar-hint">Point at a table or the floor, then tap to place the room</p>
+      <div class="ar-bar">
+        <button data-ar="move" title="Move">Move</button>
+        <button data-ar="left" title="Rotate left">⟲</button>
+        <button data-ar="right" title="Rotate right">⟳</button>
+        <button data-ar="smaller" title="Smaller">−</button>
+        <button data-ar="bigger" title="Bigger">+</button>
+        <button data-ar="exit" title="Exit AR">Exit</button>
+      </div>
+    </div>
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>

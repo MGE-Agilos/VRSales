@@ -218,9 +218,10 @@ export class Tooltip extends Panel {
     if (key !== this.key) { this.key = key; this.content = content; this.draw(); }
     const dist = point.distanceTo(eye);
     const toEye = eye.clone().sub(point).normalize();
+    const s = Math.max(0.1, dist / 2.4);
     this.mesh.position.copy(point).addScaledVector(toEye, Math.min(0.15, dist * 0.08));
-    this.mesh.position.y += 0.06 * Math.max(0.6, dist / 2) + 0.07;
-    this.mesh.scale.setScalar(Math.max(0.45, dist / 2.4));
+    this.mesh.position.y += s * 0.16;
+    this.mesh.scale.setScalar(s);
     this.mesh.lookAt(eye);
     this.mesh.visible = true;
   }

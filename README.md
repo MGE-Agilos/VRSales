@@ -30,6 +30,19 @@ grey = excluded.
   *Gyroscope* to look around by moving the phone.
 - The buttons at the bottom of the screen jump to each visualisation (Centre, Bar city, Filters, Globe, Cloud, Overview).
 
+## Augmented reality
+
+Two AR buttons (Meta Quest 3 passthrough, or Chrome on Android; iPhone Safari does not support WebXR yet):
+
+- **AR — on a table**: the whole room as a miniature (about 1:12, roughly 1 m across). Point at a table or the floor
+  (a green ring shows the detected surface), then tap or pull the trigger to place it. Selections work on the miniature.
+  On a phone, buttons let you move, rotate, resize and exit; on the Quest, the left stick turns and resizes it and **X**
+  places it again.
+- **AR — life-size**: the room at full size, around you, in your real surroundings.
+
+The room content lives in one `world` group that AR moves and scales (`src/ar.js`); presence poses are exchanged in room
+coordinates, so other participants also appear as tiny figures in the miniature.
+
 ## Online: https://mge-agilos.github.io/VRSales/
 
 The room is published to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`, build `vite.pages.config.js`).
@@ -105,6 +118,7 @@ feed the globe, and a month field feeds the ring.
 | `src/panel.js` | Canvas-drawn panels with clickable regions, 3D labels |
 | `src/screen.js` | Navigation without a headset: viewpoints, touch joystick, keyboard, gyroscope, follow someone |
 | `src/presence.js` | Other participants' avatars, publishing your own pose, notifications |
+| `src/ar.js` | Augmented reality: surface detection, placing, rotating and scaling the miniature, phone buttons |
 | `qlik-proxy.js` | Vite plugin (local server): `/qlik/…` proxy to the tenant with the key, and `/qlik-status` |
 | `presence-server.js` | Vite plugin (local server): presence relay (POST + SSE stream) |
 | `tools/export-snapshot.mjs` | Exports the public copy of Sales Analysis |
