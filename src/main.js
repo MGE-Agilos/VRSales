@@ -523,6 +523,7 @@ document.getElementById('panel-toggle').addEventListener('click', () => ui.panel
 const ar = new ARMode({ renderer, scene, world, overlay: ui.arOverlay });
 // mode: 'vr' | 'ar-table' (miniature on a real surface) | 'ar-room' (full size around you)
 async function enter(mode) {
+  if (renderer.xr.isPresenting) return; // a second tap on a button while a session is already running
   const isAR = mode !== 'vr';
   const session = isAR
     ? await navigator.xr.requestSession('immersive-ar', {
